@@ -185,7 +185,8 @@ there are no separate filters per recipient. Existing findings are not replayed.
 Run plan and apply again after changing these settings.
 
 No Python or Terraform source edits are needed. Keep your configuration file, credentials
-and Terraform state private. Retain the provider lock file. Use separate
+and Terraform state private. Terraform generates its provider lock file locally;
+it is excluded from this repository. Use separate
 project/state directories for different tenancies: changing the profile does
 not select a separate Terraform state.
 
