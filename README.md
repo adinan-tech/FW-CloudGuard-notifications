@@ -192,7 +192,10 @@ not select a separate Terraform state.
 
 ## 6. Plan and deploy
 
-**Step 1: Preview the changes.** Run the command below from the project root.
+Run both commands below from the **repository root directory**: the folder
+containing `README.md`, `scripts/` and `terraform/`.
+
+**Step 1: Preview the changes.** Run:
 It runs `terraform plan` through the deployment script and shows what will be
 created, changed or deleted without deploying resources.
 
