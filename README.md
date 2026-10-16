@@ -17,7 +17,16 @@ policies are configured separately. No Function or subnet is needed.
 ## 1. Prepare the deployment machine and OCI access
 
 Install Python 3.10+, Terraform 1.3+ and OCI CLI. No Python packages are needed.
-Run all commands below from this project's root directory.
+Download and extract the repository, or clone it with Git:
+
+```powershell
+git clone https://github.com/adinan-tech/FW-CloudGuard-notifications.git
+cd FW-CloudGuard-notifications
+```
+
+Run all commands below from this project's root directory. The deployment
+machine needs outbound HTTPS access to the Terraform registry, provider
+downloads and OCI APIs.
 
 ```powershell
 python --version
@@ -56,6 +65,7 @@ separate permissions. This stack does not create IAM policies.
 
 Use this reporting region for the automation's `region`. For example, set
 `us-ashburn-1` if reporting is in Ashburn, even when resources are in Frankfurt.
+The reporting region is not necessarily the tenancy's home region.
 The Events rule and Notifications topic are created in the reporting region.
 Do not disable/re-enable Cloud Guard to change regions: this deletes its
 customizations and problem history.
@@ -89,8 +99,13 @@ From the target's **Details** tab, copy its OCID. It must start with
 
 ## 4. Enable automatic Cloud Event emission
 
-If the target already has Cloud Event enabled with automatic execution, keep
-that configuration. Otherwise, create a dedicated notification responder:
+If the target already has a responder recipe, open it through the target and
+check **Cloud Event**. If it is enabled and executes automatically, keep that
+configuration. Otherwise, ask the recipe owner to enable it using steps 8-9.
+Each target supports only one responder recipe of this type; do not replace an
+existing shared recipe to attach another one.
+
+If the target has no responder recipe, create a dedicated notification responder:
 
 1. Open **Cloud Guard -> Recipes -> Responder Recipes**.
 2. Select tenancy root, find **OCI Responder Recipe (Oracle managed)** and
@@ -124,6 +139,8 @@ python -c "from shutil import copyfile; copyfile('terraform/cloudguard.example.t
 
 Edit only **`terraform/cloudguard.auto.tfvars.json`**. Replace all `CHANGE HERE`
 values. For the dedicated test, set `target_ids` to the target OCID from step 3.
+To find the notification compartment OCID, open **Identity & Security ->
+Compartments -> your compartment** and copy **OCID**.
 
 `scripts/deploy_stack.py` and `scripts/verify_stack.py` read the tenancy OCID
 from the selected profile in `~/.oci/config` (`%USERPROFILE%\.oci\config` on
@@ -195,8 +212,8 @@ not select a separate Terraform state.
 Run both commands below from the **repository root directory**: the folder
 containing `README.md`, `scripts/` and `terraform/`.
 
-**Step 1: Preview the changes.** Run:
-It runs `terraform plan` through the deployment script and shows what will be
+**Step 1: Preview the changes.** The command below runs `terraform plan`
+through the deployment script and shows what will be
 created, changed or deleted without deploying resources.
 
 ```powershell
@@ -206,6 +223,8 @@ python scripts/deploy_stack.py plan --config terraform/cloudguard.auto.tfvars.js
 For one recipient on a new stack, expect **3 to add, 0 to change, 0 to destroy**:
 topic, email subscription and Events rule. Check the target OCID and event type
 in `event_condition`. Resolve errors before applying.
+Each additional distinct email address adds one subscription: two recipients
+mean four resources, three mean five. All recipients share the topic and rule.
 
 **Step 2: Deploy the resources.** After reviewing the plan, run:
 
